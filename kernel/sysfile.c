@@ -284,12 +284,12 @@ create(char *path, short type, short major, short minor)
 }
 
 static struct inode* follow_symlink(struct inode* ip) {
-  struct inode* dps[NSYMLINK];
+  uint inums[NSYMLINK];
   int i, j;
   char target[MAXPATH];
 
   for(i = 0; i < NSYMLINK; ++i) {
-    dps[i]=ip;
+    inums[i] = ip->inum;
     // read the target path from symlink file
     if(readi(ip, 0, (uint64)target, 0, MAXPATH) <= 0) {
       iunlockput(ip);
@@ -297,14 +297,14 @@ static struct inode* follow_symlink(struct inode* ip) {
       return 0;
     }
     iunlockput(ip);
-    
-    // get the inode of target path 
+
+    // get the inode of target path
     if((ip = namei(target)) == 0) {
       printf("open_symlink: path \"%s\" is not exist\n", target);
       return 0;
     }
     for(j = 0; j <= i; ++j) {
-      if(ip==dps[j]) {
+      if(ip->inum == inums[j]) {
         printf("open_symlink: links form a cycle\n");
         return 0;
       }
